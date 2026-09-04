@@ -14,7 +14,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar initialUser={user} />
-      <main className="flex-grow">
+      <main className="grow">
         <Hero />
         <ManageJobSearch />
         <ApplyWithConfidence />
