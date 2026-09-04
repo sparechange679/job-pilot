@@ -25,10 +25,9 @@ Update this file after every completed feature. Any AI agent reading this should
 ### Phase 2 — Profile Page
 
 - [x] 05 Profile Page — Full UI (Implementation Complete)
-- [x] 06 Profile Save Logic (Implementation Complete)
+- [ ] 06 Profile Save Logic *
     - [x] Build Spec created ✓
-    - [x] Implementation ✓
-    - [x] Fix SDK Auth/DB integration errors ✓
+    - [ ] Implementation
 - [ ] 07 AI Profile Extraction from Resume
 - [ ] 08 Resume PDF Generation from Profile
 
