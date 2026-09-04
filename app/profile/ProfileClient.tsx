@@ -478,9 +478,26 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
                 {resumeFile ? `${(resumeFile.size / 1024 / 1024).toFixed(2)} MB` : "PDF formatting only. Maximum file size 5MB."}
               </p>
             </div>
-            <button className="px-4 py-2 border border-border bg-surface rounded-md text-[14px] font-medium text-text-primary hover:bg-surface-secondary transition-colors shadow-sm pointer-events-none">
-              {profile.resume_pdf_url || resumeFile ? "Change Resume" : "Select Resume"}
-            </button>
+            <div className="flex items-center gap-3 relative z-10">
+              {profile.resume_pdf_url && !resumeFile && (
+                <a
+                  href={profile.resume_pdf_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="px-4 py-2 border border-border bg-surface rounded-md text-[14px] font-medium text-accent hover:bg-surface-secondary transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.66667 10C1.66667 10 4.16667 4.16667 10 4.16667C15.8333 4.16667 18.3333 10 18.3333 10C18.3333 10 15.8333 15.8333 10 15.8333C4.16667 15.8333 1.66667 10 1.66667 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  View Resume
+                </a>
+              )}
+              <button className="px-4 py-2 border border-border bg-surface rounded-md text-[14px] font-medium text-text-primary hover:bg-surface-secondary transition-colors shadow-sm pointer-events-none">
+                {profile.resume_pdf_url || resumeFile ? "Change Resume" : "Select Resume"}
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-border">
