@@ -29,7 +29,7 @@ Update this file after every completed feature. Any AI agent reading this should
     - [x] Build Spec created ✓
     - [x] Implementation ✓
     - [x] Fix SDK Auth/DB integration errors ✓
-- [ ] 07 AI Profile Extraction from Resume
+- [x] 07 AI Profile Extraction from Resume
 - [ ] 08 Resume PDF Generation from Profile
 
 ### Phase 3 — Find Jobs Page
