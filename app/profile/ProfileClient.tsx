@@ -280,7 +280,14 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
    * @returns A promise that resolves after the viewing attempt finishes.
    */
   const viewResume = async (url: string) => {
+    const viewer = window.open('', '_blank');
+    if (!viewer) {
+      showToast("error", "Could not open resume. Please allow pop-ups and try again.");
+      return;
+    }
+
     setIsDownloading(true);
+    let blobUrl: string | null = null;
     try {
       const path = decodeURIComponent(new URL(url).pathname.split('/objects/')[1]);
       const { data, error } = await insforge.storage
@@ -288,10 +295,21 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
         .download(path);
 
       if (error) throw error;
+      if (!data) throw new Error('Resume download returned no data');
+      if (viewer.closed) return;
 
-      const blobUrl = URL.createObjectURL(data);
-      window.open(blobUrl, '_blank');
-    } catch (error: any) {
+      blobUrl = URL.createObjectURL(data);
+      viewer.location.href = blobUrl;
+      const viewerBlobUrl = blobUrl;
+      const checkClosed = window.setInterval(() => {
+        if (viewer.closed) {
+          window.clearInterval(checkClosed);
+          URL.revokeObjectURL(viewerBlobUrl);
+        }
+      }, 1000);
+    } catch (error) {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      viewer.close();
       console.error('Error downloading resume:', error);
       showToast("error", "Could not view resume. Please try again.");
     } finally {
