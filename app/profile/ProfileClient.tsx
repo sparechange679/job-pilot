@@ -120,9 +120,17 @@ const Toast = ({ toast, onDismiss }: { toast: ToastState; onDismiss: () => void 
   );
 };
 
+/**
+ * Renders the editable profile form with resume upload and viewing controls.
+ *
+ * @param props - Profile page properties.
+ * @param props.initialUser - User supplied by the server, or null to resolve the session in the browser.
+ * @returns The profile page, including loading feedback and save notifications.
+ */
 export default function ProfileClient({ initialUser }: { initialUser: any }) {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [user, setUser] = useState<any>(initialUser || null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
@@ -264,6 +272,50 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
     }
   };
 
+  /**
+   * Downloads a saved resume and opens its blob URL in a new browser tab.
+   * Shows an error toast on failure and resets the loading state after each attempt.
+   *
+   * @param url - Absolute InsForge storage URL containing the resume's object path.
+   * @returns A promise that resolves after the viewing attempt finishes.
+   */
+  const viewResume = async (url: string) => {
+    const viewer = window.open('', '_blank');
+    if (!viewer) {
+      showToast("error", "Could not open resume. Please allow pop-ups and try again.");
+      return;
+    }
+
+    setIsDownloading(true);
+    let blobUrl: string | null = null;
+    try {
+      const path = decodeURIComponent(new URL(url).pathname.split('/objects/')[1]);
+      const { data, error } = await insforge.storage
+        .from('resumes')
+        .download(path);
+
+      if (error) throw error;
+      if (!data) throw new Error('Resume download returned no data');
+      if (viewer.closed) return;
+
+      blobUrl = URL.createObjectURL(data);
+      viewer.location.href = blobUrl;
+      const viewerBlobUrl = blobUrl;
+      const checkClosed = window.setInterval(() => {
+        if (viewer.closed) {
+          window.clearInterval(checkClosed);
+          URL.revokeObjectURL(viewerBlobUrl);
+        }
+      }, 1000);
+    } catch (error) {
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      viewer.close();
+      console.error('Error downloading resume:', error);
+      showToast("error", "Could not view resume. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
   const [newSkill, setNewSkill] = useState("");
   const [newIndustry, setNewIndustry] = useState("");
   const [newJobTitle, setNewJobTitle] = useState("");
@@ -480,19 +532,20 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
             </div>
             <div className="flex items-center gap-3 relative z-10">
               {profile.resume_pdf_url && !resumeFile && (
-                <a
-                  href={profile.resume_pdf_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="px-4 py-2 border border-border bg-surface rounded-md text-[14px] font-medium text-accent hover:bg-surface-secondary transition-colors shadow-sm flex items-center gap-2"
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    viewResume(profile.resume_pdf_url);
+                  }}
+                  disabled={isDownloading}
+                  className="px-4 py-2 border border-border bg-surface rounded-md text-[14px] font-medium text-accent hover:bg-surface-secondary transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
                 >
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1.66667 10C1.66667 10 4.16667 4.16667 10 4.16667C15.8333 4.16667 18.3333 10 18.3333 10C18.3333 10 15.8333 15.8333 10 15.8333C4.16667 15.8333 1.66667 10 1.66667 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  View Resume
-                </a>
+                  {isDownloading ? "Loading..." : "View Resume"}
+                </button>
               )}
               <button className="px-4 py-2 border border-border bg-surface rounded-md text-[14px] font-medium text-text-primary hover:bg-surface-secondary transition-colors shadow-sm pointer-events-none">
                 {profile.resume_pdf_url || resumeFile ? "Change Resume" : "Select Resume"}
