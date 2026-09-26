@@ -120,6 +120,13 @@ const Toast = ({ toast, onDismiss }: { toast: ToastState; onDismiss: () => void 
   );
 };
 
+/**
+ * Renders the editable profile form with resume upload and viewing controls.
+ *
+ * @param props - Profile page properties.
+ * @param props.initialUser - User supplied by the server, or null to resolve the session in the browser.
+ * @returns The profile page, including loading feedback and save notifications.
+ */
 export default function ProfileClient({ initialUser }: { initialUser: any }) {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -265,6 +272,13 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
     }
   };
 
+  /**
+   * Downloads a saved resume and opens its blob URL in a new browser tab.
+   * Shows an error toast on failure and resets the loading state after each attempt.
+   *
+   * @param url - Absolute InsForge storage URL containing the resume's object path.
+   * @returns A promise that resolves after the viewing attempt finishes.
+   */
   const viewResume = async (url: string) => {
     setIsDownloading(true);
     try {
