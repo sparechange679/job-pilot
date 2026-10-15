@@ -1,11 +1,14 @@
-import OpenAI from "openai";
 import { PDFParse } from "pdf-parse";
 import { NextResponse } from "next/server";
 import { createInsforgeServer } from "@/lib/insforge-server";
 
 export const runtime = "nodejs";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openrouterApiKey = process.env.OPENROUTER_API_KEY ?? process.env.OPENAI_API_KEY;
+
+const openrouterBaseUrl = "https://openrouter.ai/api/v1";
+const openrouterReferer = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+const openrouterTitle = "JobPilot";
 
 const extractionSchema = {
   type: "object",
@@ -109,8 +112,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json({ error: "OPENAI_API_KEY is not configured." }, { status: 500 });
+    if (!openrouterApiKey) {
+      return NextResponse.json(
+        { error: "OPENROUTER_API_KEY (or OPENAI_API_KEY fallback) is not configured." },
+        { status: 500 }
+      );
     }
 
     const formData = await request.formData();
@@ -144,31 +150,50 @@ export async function POST(request: Request) {
       );
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "resume_profile_extraction",
-          strict: true,
-          schema: extractionSchema
-        }
+    const response = await fetch(`${openrouterBaseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${openrouterApiKey}`,
+        "HTTP-Referer": openrouterReferer,
+        "X-Title": openrouterTitle,
+        "Content-Type": "application/json"
       },
-      messages: [
-        {
-          role: "system",
-          content:
-              "Extract profile information from resume text. Return valid JSON that exactly matches the schema. Use empty strings or empty arrays when data is unknown."
+      body: JSON.stringify({
+        model: "openai/gpt-4o-mini",
+        temperature: 0,
+        max_tokens: 3000,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "resume_profile_extraction",
+            strict: true,
+            schema: extractionSchema
+          }
         },
-        {
-          role: "user",
-          content: extractedText
-        }
-      ]
+        messages: [
+          {
+            role: "system",
+            content:
+              "Extract profile information from resume text. Return valid JSON that exactly matches the schema. Use empty strings or empty arrays when data is unknown."
+          },
+          {
+            role: "user",
+            content: extractedText
+          }
+        ]
+      })
     });
 
-    const parsed = completion.choices[0]?.message?.content;
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`OpenRouter request failed with ${response.status}: ${errorBody}`);
+    }
+
+    const completion = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string | null } }>;
+    };
+
+    const parsed = completion.choices?.[0]?.message?.content;
     if (!parsed) {
       return NextResponse.json({ error: "Could not extract profile details from resume." }, { status: 500 });
     }
