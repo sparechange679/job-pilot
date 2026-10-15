@@ -16,6 +16,7 @@
     "next": "16.3.0",
     "openai": "^7.5.0",
     "pdf-parse": "^2.4.5",
+    "pdf-parser": "^1.0.5",
     "posthog-js": "^1.415.7",
     "posthog-node": "^5.48.1",
     "react": "19.2.8",

@@ -131,6 +131,7 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const [user, setUser] = useState<any>(initialUser || null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
@@ -333,6 +334,50 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
         return;
       }
       setResumeFile(file);
+    }
+  };
+
+  const handleExtractFromResume = async () => {
+    if (!resumeFile) {
+      showToast("error", "Please upload a resume file first.");
+      return;
+    }
+
+    setIsExtracting(true);
+    try {
+      const formData = new FormData();
+      formData.append("resume", resumeFile);
+
+      const response = await fetch("/api/resume/extract", {
+        method: "POST",
+        body: formData,
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Could not extract profile data from resume.");
+      }
+
+      const extracted = payload.data || {};
+
+      setProfile((prev: any) => ({
+        ...prev,
+        ...extracted,
+        skills: Array.isArray(extracted.skills) ? extracted.skills : prev.skills,
+        industries: Array.isArray(extracted.industries) ? extracted.industries : prev.industries,
+        work_experience: Array.isArray(extracted.work_experience) ? extracted.work_experience : prev.work_experience,
+        job_titles_seeking: Array.isArray(extracted.job_titles_seeking) ? extracted.job_titles_seeking : prev.job_titles_seeking,
+        preferred_locations: Array.isArray(extracted.preferred_locations) ? extracted.preferred_locations : prev.preferred_locations,
+        education: extracted.education ? { ...prev.education, ...extracted.education } : prev.education,
+      }));
+
+      showToast("success", "Profile fields were auto-filled from your resume. Review and save your changes.");
+    } catch (error: any) {
+      console.error("Error extracting profile from resume:", error);
+      showToast("error", error.message || "Could not extract profile data from resume.");
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -550,6 +595,19 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
               <button className="px-4 py-2 border border-border bg-surface rounded-md text-[14px] font-medium text-text-primary hover:bg-surface-secondary transition-colors shadow-sm pointer-events-none">
                 {profile.resume_pdf_url || resumeFile ? "Change Resume" : "Select Resume"}
               </button>
+              {resumeFile && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleExtractFromResume();
+                  }}
+                  disabled={isExtracting}
+                  className="px-4 py-2 bg-accent text-white rounded-md text-[14px] font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
+                >
+                  {isExtracting ? "Extracting..." : "Extract from Resume"}
+                </button>
+              )}
             </div>
           </div>
 

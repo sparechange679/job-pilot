@@ -6,9 +6,9 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Phase 1 — Foundation
-**Last completed:** 04 Database Schema
-**Next:** 05 Profile Page — Full UI
+**Phase:** Phase 2 — Profile Page
+**Last completed:** 07 AI Profile Extraction from Resume
+**Next:** 08 Resume PDF Generation from Profile
 
 ---
 
@@ -65,4 +65,5 @@ _Add decisions here as they are made during implementation._
 - **Navbar Auth Sync:** Improved `Navbar` component to use server-side session detection and `initialUser` prop to ensure correct auth state reflection across all pages and avoid client-side "flash".
 - **Profile Page Hardening:** Fixed null-safety crashes on profile array/object fields, replaced `alert()` calls with an in-app toast (rendered via portal, above the navbar), unified the completion percentage and "missing fields" banner behind a single weighted checklist, and hid the completion banner entirely once the profile reaches 100%.
 - **Resume View/Change:** Added a "View Resume" link (opens the stored PDF in a new tab) alongside the "Select/Change Resume" control once a resume has been uploaded.
+- **AI Resume Autofill (Feature 07):** Added `POST /api/resume/extract` using `pdf-parse` + OpenAI structured extraction, plus an `Extract from Resume` action on the profile upload card that auto-fills form fields for user review before save.
 - **History Note:** PR #2 (`revert-1-profile-page`) had reverted the original profile feature (PR #1) on `master`; that revert was itself reverted on `profile-extraction` to restore `ProfileClient.tsx` and the InsForge save flow before the fixes above were applied.

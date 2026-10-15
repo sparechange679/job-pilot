@@ -53,6 +53,7 @@ After building any component — update this file with the component name, file 
   - Primary Button (Save): `w-full bg-accent text-white py-3 rounded-lg font-semibold text-[16px] hover:opacity-90 transition-opacity`
   - Completion Ring: `text-error` for fill, `text-border-light` for track, `text-[20px] font-bold text-text-primary` for percentage
   - Upload Zone: `border-2 border-dashed border-border-muted rounded-xl p-10 bg-surface-secondary/50 relative`
+  - Extract Action Button: `px-4 py-2 bg-accent text-white rounded-md text-[14px] font-medium hover:opacity-90 transition-opacity disabled:opacity-60`
   - Loading Spinner: `animate-spin h-5 w-5 text-white` (inside button), `h-8 w-8 text-accent` (full page loading)
   - Tag/Badge: `inline-flex items-center gap-1 px-3 py-1 bg-surface-secondary border border-border rounded-md text-[13px] text-text-primary`
   - Experience Item: `flex flex-col gap-6 p-4 bg-surface-secondary/30 rounded-xl border border-border-light relative`
