@@ -3,12 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { insforge } from "@/lib/insforge-client";
 import { signOut } from "@/app/actions/auth";
 import posthog from "posthog-js";
 
 export function Navbar({ initialUser }: { initialUser?: object | null }) {
     const [user, setUser] = useState<object | null>(initialUser || null);
+    const pathname = usePathname();
 
     useEffect(() => {
         const checkUser = async () => {
@@ -37,17 +39,17 @@ export function Navbar({ initialUser }: { initialUser?: object | null }) {
                 <nav className="flex items-center gap-8">
                     <Link
                         href="/dashboard"
-                        className="text-sm font-medium text-text-dark hover:text-accent transition-colors">
+                        className={`text-sm font-medium transition-colors hover:text-accent ${pathname === "/dashboard" ? "text-accent" : "text-text-dark"}`}>
                         Dashboard
                     </Link>
                     <Link
                         href="/find-jobs"
-                        className="text-sm font-medium text-text-dark hover:text-accent transition-colors">
+                        className={`text-sm font-medium transition-colors hover:text-accent ${pathname.startsWith("/find-jobs") ? "text-accent" : "text-text-dark"}`}>
                         Find Jobs
                     </Link>
                     <Link
                         href="/profile"
-                        className="text-sm font-medium text-text-dark hover:text-accent transition-colors">
+                        className={`text-sm font-medium transition-colors hover:text-accent ${pathname === "/profile" ? "text-accent" : "text-text-dark"}`}>
                         Profile
                     </Link>
                 </nav>
