@@ -132,6 +132,7 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isGeneratingResume, setIsGeneratingResume] = useState(false);
   const [user, setUser] = useState<any>(initialUser || null);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
@@ -234,18 +235,20 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
 
         const { error: uploadError } = await insforge.storage
           .from('resumes')
-          .upload(filePath, resumeFile, {
-            upsert: true
-          });
+          .upload(filePath, resumeFile);
 
         if (uploadError) throw uploadError;
         
         // Get public URL
-        const { data: { publicUrl } } = insforge.storage
+        const { data: publicUrlData } = insforge.storage
           .from('resumes')
           .getPublicUrl(filePath);
-        
-        resume_pdf_url = publicUrl;
+
+        if (!publicUrlData?.publicUrl) {
+          throw new Error('Could not create resume URL after upload');
+        }
+
+        resume_pdf_url = publicUrlData.publicUrl;
       }
 
       const { error } = await insforge
@@ -378,6 +381,35 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
       showToast("error", error.message || "Could not extract profile data from resume.");
     } finally {
       setIsExtracting(false);
+    }
+  };
+
+  const handleGenerateResumeFromProfile = async () => {
+    setIsGeneratingResume(true);
+    try {
+      const response = await fetch("/api/resume/generate", {
+        method: "POST",
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || "Could not generate your resume right now.");
+      }
+
+      const generatedResumeUrl = payload.resume_pdf_url;
+      if (!generatedResumeUrl) {
+        throw new Error("Resume generation completed, but no file URL was returned.");
+      }
+
+      setProfile((prev: any) => ({ ...prev, resume_pdf_url: generatedResumeUrl }));
+      setResumeFile(null);
+      showToast("success", "Your resume PDF is ready. You can now view or download it.");
+    } catch (error: any) {
+      console.error("Error generating resume PDF:", error);
+      showToast("error", error.message || "Could not generate your resume right now.");
+    } finally {
+      setIsGeneratingResume(false);
     }
   };
 
@@ -613,11 +645,16 @@ export default function ProfileClient({ initialUser }: { initialUser: any }) {
 
           <div className="flex items-center justify-between pt-4 border-t border-border">
             <p className="text-[14px] text-text-secondary">Need a fresh document based on the fields below?</p>
-            <button className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-md text-[14px] font-medium hover:opacity-90 transition-opacity">
+            <button
+              type="button"
+              onClick={handleGenerateResumeFromProfile}
+              disabled={isGeneratingResume}
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-md text-[14px] font-medium hover:opacity-90 transition-opacity disabled:opacity-60"
+            >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9.33333 2H4.66667C3.93029 2 3.33333 2.59695 3.33333 3.33333V12.6667C3.33333 13.403 3.93029 14 4.66667 14H11.3333C12.0697 14 12.6667 13.403 12.6667 12.6667V5.33333M9.33333 2L12.6667 5.33333M9.33333 2V5.33333H12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Generate Resume from Profile
+              {isGeneratingResume ? "Generating..." : "Generate Resume from Profile"}
             </button>
           </div>
         </Card>

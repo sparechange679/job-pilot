@@ -6,9 +6,9 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Phase 2 — Profile Page
-**Last completed:** 07 AI Profile Extraction from Resume
-**Next:** 08 Resume PDF Generation from Profile
+**Phase:** Phase 3 — Find Jobs Page
+**Last completed:** 11 Filter + Sort + Pagination
+**Next:** 12 Job Details Page — Full UI
 
 ---
 
@@ -30,13 +30,13 @@ Update this file after every completed feature. Any AI agent reading this should
     - [x] Implementation ✓
     - [x] Fix SDK Auth/DB integration errors ✓
 - [x] 07 AI Profile Extraction from Resume
-- [ ] 08 Resume PDF Generation from Profile
+- [x] 08 Resume PDF Generation from Profile
 
 ### Phase 3 — Find Jobs Page
 
-- [ ] 09 Find Jobs Page — Full UI
-- [ ] 10 Adzuna Job Discovery
-- [ ] 11 Filter + Sort + Pagination
+- [x] 09 Find Jobs Page — Full UI
+- [x] 10 Adzuna Job Discovery
+- [x] 11 Filter + Sort + Pagination
 
 ### Phase 4 — Job Details Page
 
@@ -68,4 +68,9 @@ _Add decisions here as they are made during implementation._
 - **AI Resume Autofill (Feature 07):** Added `POST /api/resume/extract` using `pdf-parse` + OpenAI structured extraction, plus an `Extract from Resume` action on the profile upload card that auto-fills form fields for user review before save.
 - **AI Provider Update:** Migrated resume extraction model calls to OpenRouter-compatible settings (`https://openrouter.ai/api/v1` + referer/title headers) and constrained completion token limits to avoid 402 credit-limit errors with the provided key.
 - **OpenRouter Auth Reliability Fix:** Switched resume extraction AI calls to an explicit `fetch` request with a guaranteed `Authorization: Bearer ...` header to resolve intermittent `401 Missing Authentication header` failures.
+- **Resume PDF Generation (Feature 08):** Added `POST /api/resume/generate` to build polished resume content with GPT-4o, render a PDF with `@react-pdf/renderer`, upload to `resumes/{user_id}/resume.pdf` (upsert), persist `resume_pdf_url` in `profiles`, and wired the profile page "Generate Resume from Profile" action with loading and toast states.
+- **Feature 08 Type-Safety Follow-up:** Aligned resume upload/public-URL calls with the current InsForge SDK signatures and fixed server PDF render/upload typing so production build and TypeScript checks pass.
+- **Find Jobs UI (Feature 09):** Rebuilt `app/find-jobs/page.tsx` to match the design with a token-based search card, results banner, filter chips, score-meter table, source badges, and pagination controls using static sample rows as placeholders for upcoming data integration.
+- **Adzuna Job Discovery (Feature 10):** Added `POST /api/agent/find` to run Adzuna discovery (country detection + `it-jobs` filter), score each result against the user profile via GPT matching, save jobs with `source: 'search'`, track `agent_runs` lifecycle updates, and emit PostHog `job_search_started`/`job_found` events. Wired `app/find-jobs/FindJobsClient.tsx` to call the endpoint, refresh persisted DB results, and show success/error banners.
+- **Find Jobs Filtering + Sorting + Pagination (Feature 11):** Wired `app/find-jobs/page.tsx` to read URL search params and query the `jobs` table with user-scoped filters (`all/high/low`), sort modes (`match_score`, newest, oldest), case-insensitive company/title search, and 20-per-page pagination with exact counts. Updated `app/find-jobs/FindJobsClient.tsx` controls to drive URL state and render server-backed counts and page navigation.
 - **History Note:** PR #2 (`revert-1-profile-page`) had reverted the original profile feature (PR #1) on `master`; that revert was itself reverted on `profile-extraction` to restore `ProfileClient.tsx` and the InsForge save flow before the fixes above were applied.
