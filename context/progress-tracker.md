@@ -6,9 +6,9 @@ Update this file after every completed feature. Any AI agent reading this should
 
 ## Current Status
 
-**Phase:** Phase 3 — Find Jobs Page
-**Last completed:** 11 Filter + Sort + Pagination
-**Next:** 12 Job Details Page — Full UI
+**Phase:** Phase 5 — Dashboard
+**Last completed:** 17 Analytics Charts — PostHog Data
+**Next:** None — Phase 5 complete
 
 ---
 
@@ -41,14 +41,14 @@ Update this file after every completed feature. Any AI agent reading this should
 ### Phase 4 — Job Details Page
 
 - [ ] 12 Job Details Page — Full UI
-- [ ] 13 Company Research Agent
+- [ ] 13 Company Research Agent (implementation in progress; live and concurrency verification pending)
 
 ### Phase 5 — Dashboard
 
-- [ ] 14 Dashboard Page — Full UI
-- [ ] 15 Stats Bar — Real Data
-- [ ] 16 Recent Activity — Real Data
-- [ ] 17 Analytics Charts — PostHog Data
+- [x] 14 Dashboard Page — Full UI
+- [x] 15 Stats Bar — Real Data
+- [x] 16 Recent Activity — Real Data
+- [x] 17 Analytics Charts — PostHog Data
 
 ---
 
@@ -73,4 +73,10 @@ _Add decisions here as they are made during implementation._
 - **Find Jobs UI (Feature 09):** Rebuilt `app/find-jobs/page.tsx` to match the design with a token-based search card, results banner, filter chips, score-meter table, source badges, and pagination controls using static sample rows as placeholders for upcoming data integration.
 - **Adzuna Job Discovery (Feature 10):** Added `POST /api/agent/find` to run Adzuna discovery (country detection + `it-jobs` filter), score each result against the user profile via GPT matching, save jobs with `source: 'search'`, track `agent_runs` lifecycle updates, and emit PostHog `job_search_started`/`job_found` events. Wired `app/find-jobs/FindJobsClient.tsx` to call the endpoint, refresh persisted DB results, and show success/error banners.
 - **Find Jobs Filtering + Sorting + Pagination (Feature 11):** Wired `app/find-jobs/page.tsx` to read URL search params and query the `jobs` table with user-scoped filters (`all/high/low`), sort modes (`match_score`, newest, oldest), case-insensitive company/title search, and 20-per-page pagination with exact counts. Updated `app/find-jobs/FindJobsClient.tsx` controls to drive URL state and render server-backed counts and page navigation.
+- **Job Description Preview Follow-up:** Adzuna provides a truncated description snippet; the job details page now identifies that the listing may be a preview and links to the original posting for the full description when an external URL is available.
+- **Company Research (Feature 13, in progress):** Added an authenticated job-scoped research route, Stagehand v4 browsing with a job/profile fallback, nine-field dossier validation and rendering, and server-side PostHog event after saving. pnpm installed Stagehand 4.3.0 with Zod 4.4.3; redirect HEAD requests pin validated public DNS addresses. A live run has not been attempted because the Browserbase key was exposed in session context. Multi-instance locking and a live end-to-end run remain before marking complete.
+- **Dashboard UI (Feature 14):** Added the complete mock dashboard with responsive stat cards, profile completion prompt, recent activity feed, company research bars, jobs-over-time SVG line chart, and match score distribution bars.
+- **Dashboard Stats (Feature 15):** Wired the four stat cards to user-scoped jobs data: total count, average match score, researched companies, and jobs found in the last seven days.
+- **Dashboard Recent Activity (Feature 16):** Wired the activity feed to completed user-scoped agent runs and researched jobs, merged by timestamp with relative times and an empty state.
+- **Dashboard Analytics (Feature 17):** Replaced mock charts with user-scoped database analytics covering seven-day research activity, 30-day job discoveries, and match-score ranges; each chart has an empty state. Removed the obsolete profile setup reminder from the dashboard.
 - **History Note:** PR #2 (`revert-1-profile-page`) had reverted the original profile feature (PR #1) on `master`; that revert was itself reverted on `profile-extraction` to restore `ProfileClient.tsx` and the InsForge save flow before the fixes above were applied.

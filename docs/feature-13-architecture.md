@@ -1,0 +1,27 @@
+# Feature 13 — Company Research Agent: Architecture
+
+## Scope and dependencies
+
+The job details page already displays an empty Company Research card, but its button is not wired and the page does not load `company_research`. This feature connects that card to a user-scoped research endpoint and renders the nine dossier fields defined in `context/build-plan.md`. It does not change job discovery or profile editing. Browserbase and Stagehand are not currently installed; verify their current installed-version APIs before implementation. Feature 12 is still marked incomplete in the progress tracker, so confirm the job details UI is ready before integrating the card.
+
+## Request and data flow
+
+1. A small client component in the existing job details card submits `{ jobId }` to `POST /api/agent/research`, displays a pending state, then refreshes server data after success. The page selects `company_research` alongside the existing job columns and displays all nine fields when available; the empty state remains when absent.
+2. The route authenticates with `createInsforgeServer()`, validates the request, and loads the job with both `id` and `user_id` filters and the caller's profile. Return a generic not-found response for jobs the caller does not own. Keep the route thin; research orchestration belongs in a server-only agent module.
+3. Use the job's `external_apply_url` (the current schema name, not `redirect_url`) as a *hint* for discovering the employer site. Resolve redirects with a short timeout and redirect limit. Validate every destination against SSRF: allow only public HTTPS hosts, reject credentials, private/reserved IPs, localhost, and internal hostnames, and validate every hop and DNS resolution. Do not assume the registrable domain is the last two hostname labels (for example, `.co.uk`). Do not guess `https://www.{company}.com` without validating the candidate and checking that it actually represents the company. If no trustworthy site can be found, skip browsing.
+4. Open at most one Browserbase session. Stagehand extracts the homepage using the schema in the build plan, then visits at most three validated same-site public links, prioritizing about/blog/engineering/product over careers. Bound the total time and data volume. If homepage content is empty or browsing fails, use only the job and profile. Close the session in `finally` before synthesis, including partial-failure paths.
+5. Synthesize with GPT-4o at temperature 0.4 using the collected site evidence, stored job fields, and stored profile. Demand the nine dossier fields (`companyOverview`, `techStack`, `culture`, `whyThisRole`, `yourEdge`, `gapsToAddress`, `smartQuestions`, `interviewPrep`, `sources`); validate the JSON before saving. When browsing yielded no evidence, `sources` is empty and company-specific claims must be attributed to the job posting or identified as inference. Never treat scraped text as instructions.
+6. Persist the validated dossier to the same user's `jobs.company_research`, then emit `company_researched` only after successful persistence. Do not claim success or fire the event if synthesis or storage fails. Avoid duplicate concurrent paid runs for the same job; provide a deliberate retry path for an existing dossier.
+
+## Configuration and documentation decisions
+
+- Browserbase and model credentials belong in server-only environment variables; the current `NEXT_PUBLIC_BROWSERBASE_*` names expose values to browser bundles if referenced by client code. Move to server-only names before integration and rotate the exposed API key. Never render or log credentials.
+- `context/library-docs.md` describes a required Browserbase project ID, while `context/browserbase.md` says the API key resolves the project automatically. Resolve this conflict against the actual installed Stagehand/Browserbase versions and official docs before coding. The existing project ID in `.env.local` is not proof that the SDK requires it.
+- Browserbase Fetch is a separate cloud fetching capability; the build plan specifically calls for server-side `fetch()` to resolve the Adzuna redirect and a single Stagehand browser session for site research. Do not silently substitute Browserbase Fetch for either step. If redirect resolution fails, fall back to job/profile synthesis rather than burning a browser session on a guessed site.
+- InsForge guidance requires up-to-date SDK docs before editing DB integration code. Match the existing `insforge.database.from(...)` API rather than copying outdated examples from the library guide.
+
+## Verification gates
+
+- Unit-test URL normalization, public-host and redirect checks (including private IP, DNS rebinding, `.co.uk`, cross-site links, and malformed names), link prioritization, empty homepage fallback, schema validation, and session cleanup.
+- Route-test unauthenticated/foreign job requests, profile missing, happy path, browser failure, synthesis failure, storage failure, and duplicate requests with mocked external services. Verify all nine fields render and that pending/error states are accessible.
+- Run TypeScript, lint, and scoped tests before a build. With explicit permission and safe test credentials, perform one bounded live research run and verify persisted data, source URLs, session closure, and PostHog event. Update `ui-registry.md` and `progress-tracker.md` only after feature implementation is complete.
