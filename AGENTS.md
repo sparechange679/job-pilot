@@ -97,70 +97,23 @@ Read in this exact order before any implementation:
 - `/remember restore` — when returning after a multi-session feature.
 
 <!-- INSFORGE:START -->
-# InsForge SDK Documentation - Overview
+## InsForge backend
 
-## What is InsForge?
+This project uses [InsForge](https://insforge.dev): an all-in-one, open-source Postgres-based backend (BaaS) that gives this app a database, authentication, file storage, edge functions, realtime, an AI model gateway, and payments through one platform.
 
-Backend-as-a-service (BaaS) platform providing:
+- **Project:** **sableek_JobPilot** (API base `https://4gg3brd2.eu-central.insforge.app`)
+- **Skills:** these InsForge skills are installed for supported coding agents. Reach for them before implementing any InsForge feature instead of guessing the API:
+  - `insforge`: app code with the `@insforge/sdk` client (database CRUD, auth, storage, edge functions, realtime, AI, email, and Stripe payments).
+  - `insforge-cli`: backend and infrastructure via the `insforge` CLI (projects, SQL, migrations, RLS policies, storage buckets, functions, secrets, payment setup, schedules, deploys).
+  - `insforge-debug`: diagnosing failures (SDK/HTTP errors, RLS denials, auth and OAuth issues) and running security or performance audits.
+  - `insforge-integrations`: wiring external auth providers (Clerk, Auth0, WorkOS, Better Auth, etc.) for JWT-based RLS, or the OKX x402 payment facilitator.
+  - `find-skills`: discovering additional skills on demand.
+- **Credentials:** app code reads keys from `.env.local`; the CLI reads `.insforge/project.json`. Never hardcode or commit keys.
 
-- **Database**: PostgreSQL with PostgREST API
-- **Authentication**: Email/password + OAuth (Google, GitHub)
-- **Storage**: File upload/download
-- **AI**: OpenRouter key provisioning and model catalog for direct OpenAI-compatible integrations
-- **Functions**: Serverless function deployment
-- **Realtime**: WebSocket pub/sub (database + client events)
+Key patterns:
 
-## Installation
-
-The following is a step-by-step guide to installing and using the InsForge TypeScript SDK for Web applications.
-
-### 🚨 CRITICAL: Follow these steps in order
-
-### Step 1: Download Template
-
-Use the `download-template` MCP tool to create a new project with your backend URL and anon key pre-configured.
-
-### Step 2: Install SDK
-
-```bash
-npm install @insforge/sdk@latest
-```
-
-### Step 3: Create SDK Client
-
-You must create a client instance using `createClient()` with your base URL and anon key:
-
-```javascript
-import { createClient } from '@insforge/sdk';
-
-const client = createClient({
-  baseUrl: 'https://4gg3brd2.eu-central.insforge.app',  // Your InsForge backend URL
-  anonKey: 'your-anon-key-here'       // Get this from backend metadata
-});
-```
-
-**API BASE URL**: Your API base URL is `https://4gg3brd2.eu-central.insforge.app`.
-
-## Getting Detailed Documentation
-
-### 🚨 CRITICAL: Always Fetch Documentation Before Writing Code
-
-Before writing or editing any InsForge integration code, you **MUST** call the `fetch-docs` or `fetch-sdk-docs` MCP tool to get the latest SDK documentation.
-
-Available documentation types:
-- `"instructions"`, `"real-time"`, `"db-sdk-typescript"`, `"auth-sdk-typescript"`, `"storage-sdk"`, `"functions-sdk"`, `"ai-integration-sdk"`, `"payments"`
-
-## When to Use SDK vs MCP Tools
-
-### Always SDK for Application Logic:
-- Authentication, Database CRUD, Storage operations, AI integration, Functions, Payments.
-
-### Use MCP Tools for Infrastructure:
-- Project scaffolding, Backend setup, Schema management, Bucket creation, Function deployment, Frontend deployment.
-
-## Important Notes
-- **EXTRA IMPORTANT**: Use Tailwind CSS 4 (Project standard). Ignore generic instructions to use v3.4.
-- Database inserts require array format: `[{...}]`
-- SDK returns `{data, error}` structure for all operations
+- Database inserts take an array: `insert([{ ... }])`.
+- Reference users with `auth.users(id)`; use `auth.uid()` in RLS policies.
+- For storage uploads, persist both the returned `url` and `key`.
 <!-- INSFORGE:END -->
 

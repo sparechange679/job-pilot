@@ -80,3 +80,25 @@ After building any component — update this file with the component name, file 
   - Error Banner: `mt-5 rounded-xl border border-error bg-surface px-4 py-4 text-[14px] font-medium text-error`
   - Results Controls (server-backed): text filter input `h-12 rounded-lg border border-border bg-surface px-4 text-[14px] text-text-primary placeholder:text-text-muted`, filter/sort action buttons with active state `border-accent bg-accent-muted text-accent-dark` and inactive state `border-border bg-surface text-text-primary`
   - Pagination Summary + Controls: summary text `text-[16px] text-text-secondary` with emphasized counts `font-semibold text-text-primary`; nav buttons `rounded-xl border border-border bg-surface px-5 py-2 text-[16px]` + disabled `text-text-muted`; active page `h-12 min-w-12 rounded-xl border border-accent-light bg-accent-muted text-accent`
+
+- **Job Description Source Link:** `app/find-jobs/[id]/page.tsx`
+  - Preview note: `mt-4 text-[14px] leading-[1.5] text-text-secondary`
+  - Original posting link: `font-medium text-accent underline underline-offset-2 hover:text-accent-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`
+
+- **Company Research:** `components/job-details/CompanyResearch.tsx`
+  - Card: `overflow-hidden rounded-[16px] border border-border bg-surface shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]`
+  - Action: `inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-accent px-5 text-[14px] font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60`
+  - Tech badge: `rounded-full bg-accent-muted px-3 py-1 text-accent`
+  - Error: `mx-6 mt-4 rounded-lg border border-error p-3 text-[14px] text-error`
+
+### Dashboard Components
+- **Dashboard Page:** `app/dashboard/page.tsx`
+  - Page shell: `flex min-h-screen flex-col bg-background`, content `mx-auto w-full max-w-[1440px] px-6 pb-16 pt-24`
+  - Cards: `rounded-2xl border border-border bg-surface p-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]`
+  - Stat value: `text-5xl font-semibold tracking-tight text-text-primary`
+  - Trend badge: `rounded bg-success-lightest px-2 py-1 font-medium text-success-darker`
+  - Profile banner: `border border-accent-light bg-accent-muted`
+  - Chart colors: `bg-accent`, `bg-info`, `bg-success-alt`, and tokenized SVG variables
+  - Real stats: server-side user-scoped `jobs` queries for total jobs, average match score, researched companies, and seven-day job count
+  - Recent activity: merged `agent_runs` and researched `jobs` records, sorted by timestamp and rendered with type-specific dots and relative times
+  - Analytics charts: tokenized SVG job-discovery line chart plus database-backed research and match-score bar charts with empty states

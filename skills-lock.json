@@ -41,13 +41,13 @@
       "source": "insforge/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/insforge/SKILL.md",
-      "computedHash": "f647c9a6fc300f721bfd55ca0e7e60dfd57808e8f44b5cb220f7dcac2e031504"
+      "computedHash": "aa9eff7d98c2e6e7e60a31af427f02c6dc2ee5da554c585962e3ddc841fd0dd2"
     },
     "insforge-cli": {
       "source": "insforge/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/insforge-cli/SKILL.md",
-      "computedHash": "2b213072d9760022bbd24b3f7a61c319f94277ab8e976c2d6af49d14025d90d6"
+      "computedHash": "33e683f67cde289a9125b8a5e32be4336d2e1f0454c07571f3173ec806fec7f0"
     },
     "insforge-debug": {
       "source": "insforge/agent-skills",

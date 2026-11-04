@@ -8,12 +8,13 @@ import {
   CircleDollarSign,
   MapPin,
   Sparkles,
-  WandSparkles,
 } from "lucide-react";
 
+import { CompanyResearch } from "@/components/job-details/CompanyResearch";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { createInsforgeServer } from "@/lib/insforge-server";
+import { dossierSchema } from "@/lib/research-dossier";
 
 type JobDetailsPageProps = {
   params: Promise<{ id: string }>;
@@ -33,6 +34,7 @@ type JobDetailsRow = {
   matched_skills: string[] | null;
   missing_skills: string[] | null;
   external_apply_url: string | null;
+  company_research: unknown;
 };
 
 function toRelativeDateLabel(value: string | null): string {
@@ -97,7 +99,7 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
   const { data, error } = await insforge.database
     .from("jobs")
     .select(
-      "id, title, company, salary, location, job_type, found_at, about_role, match_score, match_reason, matched_skills, missing_skills, external_apply_url",
+      "id, title, company, salary, location, job_type, found_at, about_role, match_score, match_reason, matched_skills, missing_skills, external_apply_url, company_research",
     )
     .eq("id", id)
     .eq("user_id", user.id)
@@ -121,6 +123,7 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
     matched_skills: data.matched_skills,
     missing_skills: data.missing_skills,
     external_apply_url: data.external_apply_url,
+    company_research: data.company_research,
   };
 
   return (
@@ -276,36 +279,23 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
           </header>
 
           <p className="text-[14px] leading-[1.5] text-text-darkest">{job.about_role ?? "No job description available."}</p>
-        </section>
-
-        <section className="overflow-hidden rounded-[16px] border border-border bg-surface shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_1px_2px_-1px_rgba(0,0,0,0.1)]">
-          <div className="flex flex-col gap-4 border-b border-border px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent-muted text-accent">
-                <WandSparkles className="h-5 w-5" />
-              </span>
-              <h2 className="text-[36px] font-semibold text-text-darkest">Company Research</h2>
-            </div>
-
-            <button
-              type="button"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-accent px-5 text-[14px] font-medium text-accent-foreground transition-opacity hover:opacity-90"
-            >
-              <Sparkles className="h-5 w-5" />
-              <span>Research Company</span>
-            </button>
-          </div>
-
-          <div className="flex min-h-[260px] flex-col items-center justify-center px-6 py-14 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-surface-secondary text-text-muted">
-              <BriefcaseBusiness className="h-8 w-8" />
-            </div>
-            <p className="text-[36px] font-medium text-text-darkest">No research yet</p>
-            <p className="mt-2 max-w-[680px] text-[14px] leading-[1.4] text-text-muted">
-              Click “Research Company” to let the AI browse {job.company ?? "this company"}'s public pages and build a dossier.
+          {job.external_apply_url && (
+            <p className="mt-4 text-[14px] leading-[1.5] text-text-secondary">
+              This listing may only include a preview. For the full description, open the{" "}
+              <a
+                href={job.external_apply_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-accent underline underline-offset-2 hover:text-accent-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                original job posting (opens in a new tab)
+              </a>
+              .
             </p>
-          </div>
+          )}
         </section>
+
+        <CompanyResearch jobId={job.id} company={job.company ?? "this company"} dossier={dossierSchema.safeParse(job.company_research).data ?? null} />
 
         <a
           href={job.external_apply_url ?? "#"}
