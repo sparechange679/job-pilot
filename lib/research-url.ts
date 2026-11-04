@@ -5,7 +5,9 @@ import { isIP } from "node:net";
 const blockedHosts = new Set(["localhost", "local", "internal", "test", "invalid", "example"]);
 
 export function publicAddress(address: string): boolean {
-  if (isIP(address) !== 4) return false;
+  const family = isIP(address);
+  if (family === 6) return publicIPv6Address(address);
+  if (family !== 4) return false;
   const [first, second, third] = address.split(".").map(Number);
   return !(
     first === 0 || first === 10 || first === 127 || first >= 224 ||
@@ -15,6 +17,26 @@ export function publicAddress(address: string): boolean {
     (first === 198 && (second === 18 || second === 19 || (second === 51 && third === 100))) ||
     (first === 203 && second === 0 && third === 113)
   );
+}
+
+function publicIPv6Address(address: string): boolean {
+  const halves = address.split("::");
+  if (halves.length > 2) return false;
+  const parsePart = (part: string): number[] => part ? part.split(":").map((value) => {
+    if (!/^[0-9a-f]{1,4}$/i.test(value)) throw new Error("Invalid IPv6 address");
+    return Number.parseInt(value, 16);
+  }) : [];
+  const left = parsePart(halves[0]);
+  const right = halves.length === 2 ? parsePart(halves[1]) : [];
+  if (left.length + right.length > 8 || (halves.length === 1 && left.length !== 8)) return false;
+  const parts = [...left, ...Array(8 - left.length - right.length).fill(0), ...right];
+  const first = parts[0];
+  return !(first === 0 || first >= 0xff00 || (first & 0xfe00) === 0xfc00 ||
+    (first & 0xffc0) === 0xfe80 || (first === 0x2001 && parts[1] === 0x0db8) ||
+    (parts[0] === 0 && parts.slice(1).every((part) => part === 0)) ||
+    (parts[0] === 0 && parts.slice(1, 7).every((part) => part === 0) && parts[7] === 1) ||
+    (parts[0] === 0 && parts[1] === 0 && parts[2] === 0 && parts[3] === 0 &&
+      parts[4] === 0 && parts[5] === 0xffff));
 }
 
 export async function safePublicUrl(value: string): Promise<URL | null> {
@@ -44,7 +66,7 @@ async function headHop(url: URL): Promise<{ status: number; location: string | u
     const operation = request(url, {
       method: "HEAD",
       timeout: 4000,
-      lookup: (_host, _options, callback) => callback(null, addresses[0].address, 4),
+      lookup: (_host, _options, callback) => callback(null, addresses[0].address, addresses[0].family),
     }, (response) => {
       resolve({ status: response.statusCode ?? 0, location: response.headers.location });
       response.resume();

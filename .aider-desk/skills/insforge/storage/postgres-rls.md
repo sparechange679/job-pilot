@@ -117,8 +117,6 @@ GRANT USAGE ON SCHEMA storage TO authenticated;
 ```sql
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS storage_objects_owner_select ON storage.objects;
-
 CREATE POLICY storage_objects_public_read ON storage.objects
   FOR SELECT TO authenticated, anon
   USING (bucket = 'photos');
@@ -140,7 +138,6 @@ Marking the bucket `public` does more than fast-path routing: direct object GETs
 ```sql
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS storage_objects_owner_select ON storage.objects;
 DROP POLICY IF EXISTS storage_objects_owner_insert ON storage.objects;
 DROP POLICY IF EXISTS storage_objects_owner_update ON storage.objects;
 DROP POLICY IF EXISTS storage_objects_owner_delete ON storage.objects;
@@ -195,7 +192,6 @@ CREATE INDEX IF NOT EXISTS team_members_user_idx ON team_members (user_id);
 
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS storage_objects_owner_select ON storage.objects;
 -- (drop the rest of the owner-only set too)
 
 CREATE POLICY storage_objects_team_select ON storage.objects
@@ -252,8 +248,6 @@ When the S3 gateway overwrites a key that a REST user previously owned, the plat
 If end users need to see S3-uploaded rows, expose them explicitly:
 
 ```sql
-DROP POLICY IF EXISTS storage_objects_owner_select ON storage.objects;
-
 CREATE POLICY storage_objects_visible_select ON storage.objects
   FOR SELECT TO authenticated
   USING (
