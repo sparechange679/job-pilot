@@ -1,13 +1,18 @@
 'use server';
 
 import { createInsforgeAuth } from "@/lib/insforge-server";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+
+const h = await headers();
+const origin =
+  process.env.NEXT_PUBLIC_APP_URL ??
+  `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
 
 export async function signInWithOAuth(provider: 'google' | 'github') {
   const auth = await createInsforgeAuth();
   const { data, error } = await auth.signInWithOAuth(provider, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`,
+    redirectTo: `${origin}/api/auth/callback`,
     skipBrowserRedirect: true,
   });
 
