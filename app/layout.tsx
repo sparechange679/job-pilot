@@ -4,6 +4,7 @@ import "./globals.css";
 import { PostHogIdentity } from "@/components/providers/PostHogProvider";
 import PostHogPageView from "@/components/providers/PostHogPageView";
 import React, { Suspense } from "react";
+import {Analytics} from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
         <PostHogIdentity>
           <Suspense fallback={null}>
             <PostHogPageView />
+            <Analytics />
           </Suspense>
           {children}
         </PostHogIdentity>
